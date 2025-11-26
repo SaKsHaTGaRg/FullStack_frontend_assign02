@@ -1,28 +1,31 @@
-import client from "./client";
+import apiClient from "./client"; 
+// renamed locally, same import path
 
-// GET ALL EMPLOYEES
-export const getAllEmployees = () => client.get("/api/v1/employee");
+// Fetch all employees
+export const fetchAllEmployees = () => apiClient.get("/api/v1/employee");
 
-// GET EMPLOYEE BY ID
-export const getEmployeeById = (id) => client.get(`/api/v1/employee/${id}`);
+// Fetch a single employee by ID
+export const fetchEmployeeById = (empId) => 
+  apiClient.get(`/api/v1/employee/${empId}`);
 
-// CREATE EMPLOYEE (WITH IMAGE)
-export const createEmployee = (formData) =>
-  client.post("/api/v1/employee", formData, {
+// Create a new employee (supports file upload)
+export const addNewEmployee = (employeeForm) =>
+  apiClient.post("/api/v1/employee", employeeForm, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-// UPDATE EMPLOYEE (WITH IMAGE)
-export const updateEmployee = (id, formData) =>
-  client.put(`/api/v1/employee/${id}`, formData, {
+// Update employee details (also supports image upload)
+export const reviseEmployee = (empId, employeeForm) =>
+  apiClient.put(`/api/v1/employee/${empId}`, employeeForm, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-// DELETE EMPLOYEE
-export const deleteEmployee = (id) => client.delete(`/api/v1/employee/${id}`);
+// Delete employee using ID
+export const removeEmployee = (empId) => 
+  apiClient.delete(`/api/v1/employee/${empId}`);
 
-// SEARCH EMPLOYEES
-export const searchEmployees = (department, position) =>
-  client.get(
-    `/api/v1/employee/search/by?department=${department}&position=${position}`
+// Search employees by department + position
+export const filterEmployees = (dept, role) =>
+  apiClient.get(
+    `/api/v1/employee/search/by?department=${dept}&position=${role}`
   );

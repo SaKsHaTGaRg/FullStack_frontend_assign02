@@ -1,26 +1,28 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Employees from "./pages/EmployeeList";
-import CreateEmployee from "./pages/CreateEmployee";
-import EmployeeDetails from "./pages/EmployeeDetails";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import LoginPage from "./pages/Login"; 
+import SignupPage from "./pages/Signup";
+import StaffDirectoryPage from "./pages/EmployeeList";
+import EmployeeFormPage from "./pages/CreateEmployee";
+import ViewEmployeePage from "./pages/EmployeeDetails";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Redirect root → login */}
         <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        {/* Authentication pages */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-        {/* employees */}
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/employees/create" element={<CreateEmployee />} />
-        <Route path="/employees/edit/:eid" element={<CreateEmployee />} />
-        <Route path="/employees/detail/:eid" element={<EmployeeDetails />} />
+        {/* Employee management pages */}
+        <Route path="/employees" element={<StaffDirectoryPage />} />
+        <Route path="/employees/create" element={<EmployeeFormPage />} />
+        <Route path="/employees/edit/:eid" element={<EmployeeFormPage />} />
+        <Route path="/employees/detail/:eid" element={<ViewEmployeePage />} />
 
       </Routes>
     </BrowserRouter>

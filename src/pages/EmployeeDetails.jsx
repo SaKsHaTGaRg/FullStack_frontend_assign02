@@ -1,35 +1,40 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import client from "../api/client";
+import apiClient from "../api/client";
 
-export default function EmployeeDetails() {
+export default function ViewEmployeePage() {
   const { eid } = useParams();
   const navigate = useNavigate();
-  const [employee, setEmployee] = useState(null);
-  const [error, setError] = useState("");
 
+  // States for employee info + error
+  const [empRecord, setEmpRecord] = useState(null);
+  const [fetchError, setFetchError] = useState("");
+
+  // Load employee information on mount
   useEffect(() => {
-    const loadEmployee = async () => {
+    const fetchEmployeeData = async () => {
       try {
-        const res = await client.get(`/employee/${eid}`);
-        setEmployee(res.data);
-      } catch (err) {
-        setError("Failed to fetch employee details");
+        const response = await apiClient.get(`/employee/${eid}`);
+        setEmpRecord(response.data);
+      } catch (error) {
+        setFetchError("Unable to load employee details.");
       }
     };
 
-    loadEmployee();
+    fetchEmployeeData();
   }, [eid]);
 
-  if (error) {
+  // Display error if request fails
+  if (fetchError) {
     return (
       <div className="container mt-5">
-        <div className="alert alert-danger">{error}</div>
+        <div className="alert alert-danger">{fetchError}</div>
       </div>
     );
   }
 
-  if (!employee) {
+  // Loading state
+  if (!empRecord) {
     return (
       <div className="container mt-5">
         <h4>Loading employee details...</h4>
@@ -40,49 +45,56 @@ export default function EmployeeDetails() {
   return (
     <div className="container" style={{ maxWidth: 600, marginTop: 50 }}>
       <div className="card shadow p-4" style={{ borderRadius: "20px" }}>
+
         <h2 className="fw-bold text-center mb-4">Employee Details</h2>
+
+        {/* Profile Image Display */}
         <div className="text-center mb-3">
-  {employee.profileImage ? (
-    <img
-      src={`http://localhost:5000/uploads/${employee.profileImage}`}
-      alt="Profile"
-      style={{
-        width: "150px",
-        height: "150px",
-        objectFit: "cover",
-        borderRadius: "50%",
-        border: "3px solid #ccc"
-      }}
-    />
-  ) : (
-    <div
-      style={{
-        width: "150px",
-        height: "150px",
-        borderRadius: "50%",
-        background: "#eee",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        fontSize: "50px",
-        color: "#aaa",
-        margin: "0 auto"
-      }}
-    >
-      🙍
-    </div>
-  )}
-</div>
+          {empRecord.profileImage ? (
+            <img
+              src={`http://localhost:5000/uploads/${empRecord.profileImage}`}
+              alt="Profile"
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "50%",
+                border: "3px solid #ccc",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "150px",
+                height: "150px",
+                borderRadius: "50%",
+                background: "#eee",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "50px",
+                color: "#aaa",
+                margin: "0 auto",
+              }}
+            >
+              🙍
+            </div>
+          )}
+        </div>
 
+        {/* Employee Details Display */}
+        <p><strong>First Name:</strong> {empRecord.first_name}</p>
+        <p><strong>Last Name:</strong> {empRecord.last_name}</p>
+        <p><strong>Email:</strong> {empRecord.email}</p>
+        <p><strong>Position:</strong> {empRecord.position}</p>
+        <p><strong>Department:</strong> {empRecord.department}</p>
+        <p><strong>Salary:</strong> ${empRecord.salary}</p>
+        <p>
+          <strong>Date Joined:</strong>{" "}
+          {new Date(empRecord.dateOfJoining).toLocaleDateString()}
+        </p>
 
-        <p><strong>First Name:</strong> {employee.first_name}</p>
-        <p><strong>Last Name:</strong> {employee.last_name}</p>
-        <p><strong>Email:</strong> {employee.email}</p>
-        <p><strong>Position:</strong> {employee.position}</p>
-        <p><strong>Department:</strong> {employee.department}</p>
-        <p><strong>Salary:</strong> ${employee.salary}</p>
-        <p><strong>Date Joined:</strong> {new Date(employee.dateOfJoining).toLocaleDateString()}</p>
-
+        {/* Action Buttons */}
         <div className="d-flex gap-3 mt-4">
           <button
             className="btn btn-secondary rounded-pill w-50"
@@ -93,7 +105,7 @@ export default function EmployeeDetails() {
 
           <button
             className="btn btn-primary rounded-pill w-50"
-            onClick={() => navigate(`/employees/edit/${employee._id}`)}
+            onClick={() => navigate(`/employees/edit/${empRecord._id}`)}
           >
             Edit Employee
           </button>

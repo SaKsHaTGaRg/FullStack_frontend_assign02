@@ -1,17 +1,20 @@
-import client from "./client";
+import apiClient from "./client"; 
+// renamed locally, same path
 
-export const loginUser = (usernameOrEmail, password) => {
-  return client.post("/user/login", {
-    username: usernameOrEmail,
-    email: usernameOrEmail,
-    password
+// Login existing user (accepts username OR email)
+export const authenticateUser = (identifier, passkey) => {
+  return apiClient.post("/user/login", {
+    username: identifier,  // backend will check username or email
+    email: identifier,
+    password: passkey
   });
 };
 
-export const signupUser = (username, email, password) => {
-  return client.post("/user/signup", {
-    username,
-    email,
-    password
+// Register a new user
+export const registerNewUser = (chosenName, userEmail, userPass) => {
+  return apiClient.post("/user/signup", {
+    username: chosenName,
+    email: userEmail,
+    password: userPass
   });
 };

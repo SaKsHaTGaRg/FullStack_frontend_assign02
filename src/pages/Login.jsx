@@ -1,41 +1,53 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../api/user";
+import { authenticateUser } from "../api/user"; 
+// renamed locally; same path + still works
 
-export default function Login() {
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginPage() {
+  // Form field states
+  const [identifier, setIdentifier] = useState("");  // username or email
+  const [passInput, setPassInput] = useState("");
 
-  const [errors, setErrors] = useState({});
+  // Error handling state
+  const [formErrors, setFormErrors] = useState({});
+
   const navigate = useNavigate();
 
-  const validate = () => {
-    const newErrors = {};
-    if (!usernameOrEmail.trim()) {
-      newErrors.usernameOrEmail = "Username or email is required.";
+  // Basic validation before sending request
+  const validateFields = () => {
+    const errBag = {};
+
+    if (!identifier.trim()) {
+      errBag.identifier = "Username or email is required.";
     }
-    if (!password.trim()) {
-      newErrors.password = "Password is required.";
+    if (!passInput.trim()) {
+      errBag.passInput = "Password is required.";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFormErrors(errBag);
+    return Object.keys(errBag).length === 0;
   };
 
-  const handleLogin = async (e) => {
+  // Submit login credentials
+  const processLogin = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validateFields()) return;
 
     try {
-      console.log("Attempting login with:", { usernameOrEmail, password });
-      const res = await loginUser(usernameOrEmail, password);
-      const token = res.data.token || res.data.jwt_token;
+      console.log("Logging in with:", { identifier, passInput });
 
-      localStorage.setItem("token", token);
+      const response = await authenticateUser(identifier, passInput);
+
+      // Backend sometimes returns token under different keys
+      const tokenValue = response.data.jwt_token || response.data.token;
+
+      // Save token for axios interceptor
+      localStorage.setItem("token", tokenValue);
+
       navigate("/employees");
     } catch (err) {
-      setErrors({ general: "Invalid login credentials." });
+      setFormErrors({ general: "Invalid login credentials." });
     }
   };
 
@@ -44,32 +56,35 @@ export default function Login() {
       <div className="card shadow p-4">
         <h2 className="text-center fw-bold mb-4">Login</h2>
 
-        {errors.general && (
-          <div className="alert alert-danger">{errors.general}</div>
+        {/* General Error */}
+        {formErrors.general && (
+          <div className="alert alert-danger">{formErrors.general}</div>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={processLogin}>
+          {/* Username / Email */}
           <input
             className="form-control mb-1"
             placeholder="Username or Email"
-            value={usernameOrEmail}
-            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             style={{ borderRadius: "12px" }}
           />
-          {errors.usernameOrEmail && (
-            <p className="text-danger small">{errors.usernameOrEmail}</p>
+          {formErrors.identifier && (
+            <p className="text-danger small">{formErrors.identifier}</p>
           )}
 
+          {/* Password */}
           <input
             type="password"
             className="form-control mb-1"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={passInput}
+            onChange={(e) => setPassInput(e.target.value)}
             style={{ borderRadius: "12px" }}
           />
-          {errors.password && (
-            <p className="text-danger small">{errors.password}</p>
+          {formErrors.passInput && (
+            <p className="text-danger small">{formErrors.passInput}</p>
           )}
 
           <button className="btn btn-primary w-100 py-2 rounded-pill mt-3">

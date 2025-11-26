@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import client from "../api/client";
+import apiClient from "../api/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { logout } from "../utils/auth";
 
-export default function CreateEmployee() {
+export default function EmployeeFormPage() {
   const navigate = useNavigate();
   const { eid } = useParams();
-  const isEdit = Boolean(eid);
 
-  const [form, setForm] = useState({
+  // Determine if form is in edit mode
+  const editingMode = Boolean(eid);
+
+  // Form input state
+  const [employeeFields, setEmployeeFields] = useState({
     first_name: "",
     last_name: "",
     email: "",
@@ -18,52 +21,62 @@ export default function CreateEmployee() {
     dateOfJoining: "",
   });
 
-  const [profileImage, setProfileImage] = useState(null);
-  const [error, setError] = useState("");
+  // File upload state
+  const [uploadedImage, setUploadedImage] = useState(null);
 
-  // Load employee data if editing
+  // Error state
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Load existing employee details when editing
   useEffect(() => {
-    if (isEdit) {
-      const loadEmployee = async () => {
-        try {
-          const res = await client.get(`/employee/${eid}`);
-          setForm(res.data);
-        } catch (err) {
-          setError("Failed to load employee data.");
-        }
-      };
-      loadEmployee();
-    }
-  }, [eid, isEdit]);
+    const fetchEmployeeDetails = async () => {
+      try {
+        const response = await apiClient.get(`/employee/${eid}`);
+        setEmployeeFields(response.data);
+      } catch (err) {
+        setErrorMsg("Unable to load employee data.");
+      }
+    };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    if (editingMode) fetchEmployeeDetails();
+  }, [editingMode, eid]);
+
+  // Handle input field changes
+  const handleFieldUpdate = (e) => {
+    setEmployeeFields({ ...employeeFields, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
-    setProfileImage(e.target.files[0]);
+  // Handle upload field update
+  const handleImageUpload = (e) => {
+    setUploadedImage(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
+  // Submit create/edit form
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setErrorMsg("");
 
     try {
-      const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+      const payload = new FormData();
 
-      if (profileImage) {
-        formData.append("profileImage", profileImage);
+      // Append all text fields
+      Object.entries(employeeFields).forEach(([key, value]) =>
+        payload.append(key, value)
+      );
+
+      // Append file if uploaded
+      if (uploadedImage) {
+        payload.append("profileImage", uploadedImage);
       }
 
-      if (isEdit) {
-        await client.put(`/employee/${eid}`, formData, {
+      if (editingMode) {
+        // PUT → update employee
+        await apiClient.put(`/employee/${eid}`, payload, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        await client.post("/employee", formData, {
+        // POST → create new employee
+        await apiClient.post("/employee", payload, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
@@ -71,7 +84,9 @@ export default function CreateEmployee() {
       navigate("/employees");
     } catch (err) {
       console.error(err);
-      setError(`Failed to ${isEdit ? "update" : "create"} employee.`);
+      setErrorMsg(
+        `Failed to ${editingMode ? "update" : "create"} employee.`
+      );
     }
   };
 
@@ -91,27 +106,29 @@ export default function CreateEmployee() {
 
       <div className="card shadow p-4" style={{ borderRadius: "20px" }}>
         <h2 className="fw-bold text-center mb-4">
-          {isEdit ? "Edit Employee" : "Create Employee"}
+          {editingMode ? "Edit Employee" : "Add New Employee"}
         </h2>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {errorMsg && <div className="alert alert-danger">{errorMsg}</div>}
 
-        <form onSubmit={handleSubmit} encType="multipart/form-data">
-          {Object.keys(form).map((key) => (
+        <form onSubmit={handleFormSubmit} encType="multipart/form-data">
+
+          {/* Dynamic input mapping */}
+          {Object.keys(employeeFields).map((fieldName) => (
             <input
-              key={key}
+              key={fieldName}
               className="form-control mb-3"
               type={
-                key === "salary"
+                fieldName === "salary"
                   ? "number"
-                  : key === "dateOfJoining"
+                  : fieldName === "dateOfJoining"
                   ? "date"
                   : "text"
               }
-              name={key}
-              value={form[key]}
-              onChange={handleChange}
-              placeholder={key.replace(/([A-Z])/g, " $1")}
+              name={fieldName}
+              value={employeeFields[fieldName]}
+              onChange={handleFieldUpdate}
+              placeholder={fieldName.replace(/([A-Z])/g, " $1")}
               style={{
                 borderRadius: "12px",
                 padding: "10px",
@@ -119,18 +136,18 @@ export default function CreateEmployee() {
             />
           ))}
 
-          {/* File upload */}
+          {/* Image upload */}
           <label className="fw-bold mb-1">Profile Image</label>
           <input
             type="file"
             className="form-control mb-3"
             accept="image/*"
-            onChange={handleFileChange}
+            onChange={handleImageUpload}
             style={{ borderRadius: "12px" }}
           />
 
           <button className="btn btn-primary w-100 py-2 rounded-pill">
-            {isEdit ? "Update Employee" : "Create Employee"}
+            {editingMode ? "Update Employee" : "Create Employee"}
           </button>
 
           <button

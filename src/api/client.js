@@ -1,22 +1,25 @@
 import axios from "axios";
 
-const client = axios.create({
+// Create a pre-configured axios instance for API requests
+const apiClient = axios.create({
   baseURL: "https://one01512083-comp3123-assignment2-backend-8pbk.onrender.com/api/v1/", 
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true
+  withCredentials: true, // allow sending cookies if needed
 });
 
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  console.log("TOKEN BEING SENT → ", token);
+// Interceptor runs BEFORE every request → attaches JWT token
+apiClient.interceptors.request.use((config) => {
+  const storedToken = localStorage.getItem("token");
+  console.log("TOKEN BEING SENT → ", storedToken);
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  // Add Bearer token to headers if available
+  if (storedToken) {
+    config.headers.Authorization = `Bearer ${storedToken}`;
   }
 
   return config;
 });
 
-export default client;
+export default apiClient;

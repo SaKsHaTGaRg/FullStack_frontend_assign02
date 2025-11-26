@@ -1,68 +1,70 @@
-import { useEffect, useState } from 'react';
-import client from "../api/client";
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import apiClient from "../api/client";
+import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/auth";
 
-
-export default function EmployeeList() {
-  const [employees, setEmployees] = useState([]);
-  const [error, setError] = useState("");
-  const [department, setDepartment] = useState("");
-  const [position, setPosition] = useState("");
+export default function StaffDirectoryPage() {
+  // State variables
+  const [staffRecords, setStaffRecords] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [deptFilter, setDeptFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
 
   const navigate = useNavigate();
 
+  // Load all employees on component mount
   useEffect(() => {
-    fetchEmployees();
+    retrieveStaffList();
   }, []);
 
-  const fetchEmployees = async () => {
+  // Fetch employees from backend
+  const retrieveStaffList = async () => {
     try {
-      const response = await client.get("/employee/");
-      setEmployees(response.data);
-    } catch (err) {
-      setError("Failed to fetch employees");
+      const response = await apiClient.get("/employee/");
+      setStaffRecords(response.data);
+    } catch (error) {
+      setErrorMsg("Unable to load employee data.");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+  // DELETE employee
+  const removeEmployee = async (empId) => {
+    if (!window.confirm("Are you sure you want to delete this employee?")) return;
 
     try {
-      await client.delete(`/employee/${id}`);
-      setEmployees(employees.filter((emp) => emp.employee_id !== id));
-    } catch (err) {
-      setError("Failed to delete employee");
+      await apiClient.delete(`/employee/${empId}`);
+      setStaffRecords(staffRecords.filter((item) => item.employee_id !== empId));
+    } catch (error) {
+      setErrorMsg("Failed to delete employee record.");
     }
   };
 
-  // SEARCH FUNCTION
-  const handleSearch = async () => {
+  // SEARCH employees
+  const executeSearch = async () => {
     try {
-      console.log("Searching for:", department, position);
-      const res = await client.get(
-        `/employee/search/by?department=${department}&position=${position}`
+      const response = await apiClient.get(
+        `/employee/search/by?department=${deptFilter}&position=${roleFilter}`
       );
-      setEmployees(res.data);
-    } catch (err) {
-      setError("No matching employees found. ");
+      setStaffRecords(response.data);
+    } catch (error) {
+      setErrorMsg("No employees match your search criteria.");
     }
   };
 
-  // RESET FUNCTION
-  const resetSearch = async () => {
-    setDepartment("");
-    setPosition("");
-    fetchEmployees();
+  // RESET search fields
+  const clearFilters = () => {
+    setDeptFilter("");
+    setRoleFilter("");
+    retrieveStaffList();
   };
 
   return (
     <div className="container" style={{ maxWidth: 1000, marginTop: 40 }}>
       <div className="card shadow p-4" style={{ borderRadius: "20px" }}>
-
-        {/* HEADER + BUTTONS */}
+        
+        {/* PAGE HEADER */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold">Employee List</h2>
+          <h2 className="fw-bold">Employee Directory</h2>
 
           <div className="d-flex gap-2">
             <button
@@ -82,7 +84,7 @@ export default function EmployeeList() {
           </div>
         </div>
 
-        {/* SEARCH BAR */}
+        {/* SEARCH AREA */}
         <div
           className="d-flex align-items-center gap-3 p-3 mb-4"
           style={{
@@ -95,8 +97,8 @@ export default function EmployeeList() {
             type="text"
             className="form-control"
             placeholder="Filter by Department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
+            value={deptFilter}
+            onChange={(e) => setDeptFilter(e.target.value)}
             style={{ maxWidth: "220px", borderRadius: "10px" }}
           />
 
@@ -104,30 +106,30 @@ export default function EmployeeList() {
             type="text"
             className="form-control"
             placeholder="Filter by Position"
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
             style={{ maxWidth: "220px", borderRadius: "10px" }}
           />
 
           <button
             className="btn btn-primary rounded-pill px-4"
-            onClick={handleSearch}
+            onClick={executeSearch}
           >
             Search
           </button>
 
           <button
             className="btn btn-secondary rounded-pill px-4"
-            onClick={resetSearch}
+            onClick={clearFilters}
           >
             Reset
           </button>
         </div>
 
-        {/* ERROR */}
-        {error && <div className="alert alert-danger">{error}</div>}
+        {/* ERROR DISPLAY */}
+        {errorMsg && <div className="alert alert-danger">{errorMsg}</div>}
 
-        {/* TABLE */}
+        {/* EMPLOYEE TABLE */}
         <table className="table table-bordered">
           <thead>
             <tr>
@@ -143,31 +145,30 @@ export default function EmployeeList() {
           </thead>
 
           <tbody>
-            {employees.map((emp) => (
-              <tr key={emp.employee_id}>
-                <td>{emp.first_name}</td>
-                <td>{emp.last_name}</td>
-                <td>{emp.email}</td>
-                <td>{emp.position}</td>
-                <td>{emp.department}</td>
-                <td>{emp.salary}</td>
-                <td>{new Date(emp.dateOfJoining).toLocaleDateString()}</td>
+            {staffRecords.map((record) => (
+              <tr key={record.employee_id}>
+                <td>{record.first_name}</td>
+                <td>{record.last_name}</td>
+                <td>{record.email}</td>
+                <td>{record.position}</td>
+                <td>{record.department}</td>
+                <td>{record.salary}</td>
+                <td>{new Date(record.dateOfJoining).toLocaleDateString()}</td>
 
                 <td>
-
                   <button
                     className="btn btn-info btn-sm rounded-pill me-2"
-                    onClick={()=>{
-                      navigate(`/employees/detail/${emp.employee_id}`)
-                    }
+                    onClick={() =>
+                      navigate(`/employees/detail/${record.employee_id}`)
                     }
                   >
-                    View Details
+                    View
                   </button>
+
                   <button
                     className="btn btn-primary btn-sm rounded-pill me-2"
                     onClick={() =>
-                      navigate(`/employees/edit/${emp.employee_id}`)
+                      navigate(`/employees/edit/${record.employee_id}`)
                     }
                   >
                     Edit
@@ -175,12 +176,10 @@ export default function EmployeeList() {
 
                   <button
                     className="btn btn-danger btn-sm rounded-pill"
-                    onClick={() => handleDelete(emp.employee_id)}
+                    onClick={() => removeEmployee(record.employee_id)}
                   >
                     Delete
                   </button>
-
-
                 </td>
               </tr>
             ))}
