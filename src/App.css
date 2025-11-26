@@ -1,0 +1,18 @@
+body {
+  background: #f5f7fa;
+  font-family: 'Inter', sans-serif;
+}
+
+.card {
+  border: none;
+  border-radius: 18px !important;
+}
+
+input.form-control {
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+}
+
+button {
+  border-radius: 30px !important;
+}
