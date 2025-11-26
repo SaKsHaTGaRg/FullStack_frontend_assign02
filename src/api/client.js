@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a pre-configured axios instance for API requests
 const apiClient = axios.create({
-  baseURL: "https://one01512083-comp3123-assignment2-backend-8pbk.onrender.com/api/v1/", 
+  baseURL: "https://fullstack-backend-assign02.onrender.com/api/v1/", 
   headers: {
     "Content-Type": "application/json",
   },
